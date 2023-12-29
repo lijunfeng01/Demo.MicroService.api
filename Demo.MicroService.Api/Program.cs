@@ -1,6 +1,6 @@
-using Dome.MicroService.IService;
-using Dome.MicroService.Repository;
-using Dome.MicroService.Service;
+using Demo.MicroService.IService;
+using Demo.MicroService.Repository;
+using Demo.MicroService.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 

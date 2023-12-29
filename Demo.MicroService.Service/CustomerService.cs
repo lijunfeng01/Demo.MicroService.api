@@ -1,8 +1,8 @@
 ﻿using Demo.MicroService.Models;
-using Dome.MicroService.IService;
-using Dome.MicroService.Repository;
+using Demo.MicroService.IService;
+using Demo.MicroService.Repository;
 
-namespace Dome.MicroService.Service
+namespace Demo.MicroService.Service
 {
     public class CustomerService : ICustomerService
     {

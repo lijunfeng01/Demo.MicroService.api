@@ -1,7 +1,7 @@
 ﻿using Demo.MicroService.Models;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace Dome.MicroService.Repository
+namespace Demo.MicroService.Repository
 {
     /// <summary>
     /// 仓储

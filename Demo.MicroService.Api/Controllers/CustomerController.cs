@@ -1,5 +1,5 @@
 ﻿using Demo.MicroService.Models;
-using Dome.MicroService.IService;
+using Demo.MicroService.IService;
 using Microsoft.AspNetCore.Mvc;
 
 /// <summary>

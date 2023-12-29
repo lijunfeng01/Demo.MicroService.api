@@ -1,6 +1,6 @@
 ﻿using Demo.MicroService.Models;
 
-namespace Dome.MicroService.IService
+namespace Demo.MicroService.IService
 {
     public interface ICustomerService
     {
