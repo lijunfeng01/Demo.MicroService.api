@@ -24,12 +24,18 @@ public class CustomerController : ControllerBase
     /// <summary>
     /// 更新评分
     /// </summary>
-    /// <param name="request"></param>
+    /// <param name="customerId"></param>
+    /// <param name="score"></param>
     /// <returns></returns>
-    [HttpPost("customer/score")]
-    public async Task<ActionResult<decimal>> UpdateCustomerScore([FromBody] UpdateCustomerScoreRequest request)
+    [HttpPost("customer/{customerId}/score/{score}")]
+    public async Task<ActionResult<decimal>> UpdateScore(long customerId, decimal score)
     {
-        var updatedScore = await _customerService.UpdateCustomerScoreAsync(request.CustomerId, request.ScoreChange);
+        if (score < -1000 || score > 1000)
+        {
+            return BadRequest("Invalid score. Score must be in the range [-1000, 1000]");
+        }
+
+        var updatedScore = await _customerService.UpdateCustomerScoreAsync(customerId, score);
         return updatedScore;
     }
 
@@ -40,7 +46,7 @@ public class CustomerController : ControllerBase
     /// <param name="end"></param>
     /// <returns></returns>
     [HttpGet("leaderboard")]
-    public async Task<ActionResult<List<Customer>>> GetLeaderboard(int? start, int? end)
+    public async Task<ActionResult<List<Customer>>> GetLeaderboard(int start, int? end)
     {
         var leaderboard = await _customerService.GetLeaderboardAsync(start, end);
         return leaderboard;
@@ -51,10 +57,10 @@ public class CustomerController : ControllerBase
     /// </summary>
     /// <param name="request"></param>
     /// <returns></returns>
-    [HttpGet("leaderboard/customer")]
-    public async Task<ActionResult<CustomerWithNeighbors>> GetCustomerById([FromQuery] GetCustomerByIdRequest request)
+    [HttpGet("leaderboard/{customerId}")]
+    public async Task<ActionResult<List<Customer>>> GetCustomerById(long customerId, int high = 0, int low = 0)
     {
-        var customerWithNeighbors = await _customerService.GetCustomerByIdAsync(request.CustomerId, request.High, request.Low);
+        var customerWithNeighbors = await _customerService.GetCustomerByIdAsync(customerId, high, low);
         return customerWithNeighbors;
     }
 }
