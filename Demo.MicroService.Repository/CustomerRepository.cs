@@ -10,14 +10,12 @@ namespace Demo.MicroService.Repository
     /// </summary>
     public class CustomerRepository
     {
-        //private readonly MemoryCache _cache;//添加本地缓存（弃用）
         //使用SortedSet和SortedDictionary
         private Dictionary<long, Customer> _customerDictionary;
         private SortedSet<Customer> _sortedCustomersSet;
 
         public CustomerRepository()
         {
-            //_cache = new MemoryCache(new MemoryCacheOptions());（弃用）
             // 添加默认初始数据到_customerDictionary
             _customerDictionary = new Dictionary<long, Customer>
            {
@@ -45,8 +43,6 @@ namespace Demo.MicroService.Repository
             _customerDictionary[8009471],
             _customerDictionary[11028481],
             _customerDictionary[38819],
-
-
         };
             //插入列表测试数据        
             //3.2测试数据
@@ -63,148 +59,6 @@ namespace Demo.MicroService.Repository
             //new Customer { CustomerId = 16144320, Score = 270, Rank = 93 },
             //new Customer { CustomerId = 2000437, Score = 239, Rank = 94 },    
         }
-
-        #region 加入缓存处理方法（弃用）
-        ///// <summary>
-        ///// 通过customerId异步获取有邻居的客户
-        ///// </summary>
-        ///// <param name="customerId"></param>
-        ///// <param name="high"></param>
-        ///// <param name="low"></param>
-        ///// <returns></returns>
-        //public async Task<CustomerWithNeighbors> GetCustomerWithNeighborsByIdAsync(long customerId, int high, int low)
-        //{
-        //    var customer = await GetCustomerByIdAsync(customerId);
-        //    var highNeighbors = await GetHighRankNeighborsAsync(customer.Rank, high);
-        //    var lowNeighbors = await GetLowRankNeighborsAsync(customer.Rank, low);
-
-        //    return new CustomerWithNeighbors
-        //    {
-        //        Customer = customer,
-        //        HighNeighbors = highNeighbors,
-        //        LowNeighbors = lowNeighbors
-        //    };
-        //}
-
-        ///// <summary>
-        ///// 通过customerid获取客户，加入本地缓存处理
-        ///// </summary>
-        ///// <param name="customerId"></param>
-        ///// <returns></returns>
-        //private async Task<Customer> GetCustomerByIdAsync(long customerId)
-        //{
-        //    // 从缓存中获取客户信息
-        //    if (_cache.TryGetValue(customerId, out Customer customer))
-        //    {
-        //        return customer;
-        //    }
-
-        //    // 如果缓存中不存在，从数据库或其他持久性存储中获取客户信息
-        //    customer = await RetrieveCustomerFromDatabaseAsync(customerId);
-
-        //    // 将客户信息存入缓存
-        //    _cache.Set(customerId, customer, TimeSpan.FromMinutes(10)); // 设置缓存过期时间
-
-        //    return customer;
-        //}
-
-        ///// <summary>
-        ///// 获取客户高排名邻居列表，加入本地缓存处理
-        ///// </summary>
-        ///// <param name="rank"></param>
-        ///// <param name="count"></param>
-        ///// <returns></returns>
-        //private async Task<List<Customer>> GetHighRankNeighborsAsync(int rank, int count)
-        //{
-        //    // 从缓存中获取高排名邻居列表
-        //    if (_cache.TryGetValue($"HighRankNeighbors_{rank}_{count}", out List<Customer> neighbors))
-        //    {
-        //        return neighbors;
-        //    }
-
-        //    // 如果缓存中不存在，从数据库或其他持久性存储中获取高排名邻居列表
-        //    neighbors = await RetrieveHighRankNeighborsFromDatabaseAsync(rank, count);
-
-        //    // 将高排名邻居列表存入缓存
-        //    _cache.Set($"HighRankNeighbors_{rank}_{count}", neighbors, TimeSpan.FromMinutes(10)); // 设置缓存过期时间
-
-        //    return neighbors;
-        //}
-
-        //// <summary>
-        ///// 获取客户低排名邻居列表，加入本地缓存处理
-        ///// </summary>
-        ///// <param name="rank"></param>
-        ///// <param name="count"></param>
-        ///// <returns></returns>
-        //private async Task<List<Customer>> GetLowRankNeighborsAsync(int rank, int count)
-        //{
-        //    // 从缓存中获取低排名邻居列表
-        //    if (_cache.TryGetValue($"LowRankNeighbors_{rank}_{count}", out List<Customer> neighbors))
-        //    {
-        //        return neighbors;
-        //    }
-
-        //    // 如果缓存中不存在，从数据库或其他持久性存储中获取低排名邻居列表
-        //    neighbors = await RetrieveLowRankNeighborsFromDatabaseAsync(rank, count);
-
-        //    // 将低排名邻居列表存入缓存
-        //    _cache.Set($"LowRankNeighbors_{rank}_{count}", neighbors, TimeSpan.FromMinutes(10));
-        //    return neighbors;
-        //}
-
-        ///// <summary>
-        ///// 从数据库（内存）中检索客户
-        ///// </summary>
-        ///// <param name="customerId"></param>
-        ///// <returns></returns>
-        //private async Task<Customer> RetrieveCustomerFromDatabaseAsync(long customerId)
-        //{
-        //    // 从数据库中获取客户信息的逻辑
-        //    // 模拟从数据库中获取客户信息
-        //    await Task.Delay(100); // 模拟数据库访问延迟
-        //    var customer = _customers.Find(c => c.CustomerId == customerId);
-        //    if (customer == null)
-        //    {
-        //        return null;
-        //    }
-        //    return customer;
-        //}
-
-        ///// <summary>
-        ///// 从数据库(内存)中获取高排名邻居列表
-        ///// </summary>
-        ///// <param name="rank"></param>
-        ///// <param name="count"></param>
-        ///// <returns></returns>
-        //private async Task<List<Customer>> RetrieveHighRankNeighborsFromDatabaseAsync(int rank, int count)
-        //{
-        //    // 从数据库中获取高排名邻居列表的逻辑
-
-        //    // 模拟从数据库中获取高排名邻居列表
-        //    await Task.Delay(100); // 模拟数据库访问延迟
-        //    var neighbors = _customers.Where(c => c.Rank < rank).OrderByDescending(c => c.Rank).Take(count).ToList();// 示例高排名邻居列表
-        //    return neighbors;
-        //}
-
-        ///// <summary>
-        ///// 从数据库（内存）中获取低排名邻居列表
-        ///// </summary>
-        ///// <param name="rank"></param>
-        ///// <param name="count"></param>
-        ///// <returns></returns>
-        //private async Task<List<Customer>> RetrieveLowRankNeighborsFromDatabaseAsync(int rank, int count)
-        //{
-        //    // 从数据库中获取低排名邻居列表的逻辑
-
-        //    // 模拟从数据库中获取低排名邻居列表
-        //    await Task.Delay(100); // 模拟数据库访问延迟
-        //    var neighbors = _customers.Where(c => c.Rank > rank).OrderBy(c => c.Rank).Take(count).ToList();
-        //    return neighbors;
-        //}
-
-
-        #endregion
 
         public async Task<Customer> GetCustomerByIdAsync(long customerId)
         {
