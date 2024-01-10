@@ -1,7 +1,5 @@
 ﻿using Demo.MicroService.Common;
 using Demo.MicroService.Models;
-using System.Collections.Concurrent;
-using static System.Formats.Asn1.AsnWriter;
 
 namespace Demo.MicroService.Repository
 {
@@ -10,64 +8,42 @@ namespace Demo.MicroService.Repository
     /// </summary>
     public class CustomerRepository
     {
-        //使用SortedSet和SortedDictionary
-        private Dictionary<long, Customer> _customerDictionary;
-        private SortedSet<Customer> _sortedCustomersSet;
+        //使用SortedDictionary
+        private SortedDictionary<Customer, bool> _customerDictionary;
 
         public CustomerRepository()
         {
-            // 添加默认初始数据到_customerDictionary
-            _customerDictionary = new Dictionary<long, Customer>
+            _customerDictionary = new SortedDictionary<Customer, bool>(new CustomerComparer())
            {
-              { 15514665, new Customer { CustomerId = 15514665, Score = 124, Rank = 1 }},
-              { 81546541, new Customer { CustomerId = 81546541, Score = 113, Rank = 2 }},
-              { 1745431, new Customer { CustomerId = 1745431, Score = 100, Rank = 3 }},
-              { 76786448, new Customer { CustomerId = 76786448, Score = 100, Rank = 4 }},
-              { 254814111, new Customer { CustomerId = 254814111, Score = 96, Rank = 5 }},
-              { 53274324, new Customer { CustomerId = 53274324, Score = 95, Rank = 6 }},
-              { 6144320, new Customer { CustomerId = 6144320, Score = 93, Rank = 7 }},
-              { 8009471, new Customer { CustomerId = 8009471, Score = 93, Rank = 8 }},
-              { 11028481, new Customer { CustomerId = 11028481, Score = 93, Rank = 9 }},
-              { 38819, new Customer { CustomerId = 38819, Score = 92, Rank = 10 }},
-
-          };
-            _sortedCustomersSet = new SortedSet<Customer>(new CustomerComparer())
-        {
-            _customerDictionary[15514665],
-            _customerDictionary[81546541],
-            _customerDictionary[1745431],
-            _customerDictionary[76786448],
-            _customerDictionary[254814111],
-            _customerDictionary[53274324],
-            _customerDictionary[6144320],
-            _customerDictionary[8009471],
-            _customerDictionary[11028481],
-            _customerDictionary[38819],
-        };
-            //插入列表测试数据        
-            //3.2测试数据
-            //new Customer { CustomerId = 76786448, Score = 78, Rank = 41 },
-            //new Customer { CustomerId = 254814111, Score = 65, Rank = 42 },
-            //new Customer { CustomerId = 53274324, Score = 64, Rank = 43 },
-            //new Customer { CustomerId = 6144320, Score = 32, Rank = 44 },
-
-            //3.3测试数据                                             
-            //new Customer { CustomerId = 7786448, Score = 313, Rank = 89 },
-            //new Customer { CustomerId = 54814111, Score = 301, Rank = 90 },
-            //new Customer { CustomerId = 7777777, Score = 298, Rank = 91 },
-            //new Customer { CustomerId = 96144320, Score = 298, Rank = 92 },
-            //new Customer { CustomerId = 16144320, Score = 270, Rank = 93 },
-            //new Customer { CustomerId = 2000437, Score = 239, Rank = 94 },    
+               { new Customer { CustomerId = 15514665, Score = 124, Rank = 1 }, true },
+               { new Customer { CustomerId = 81546541, Score = 113, Rank = 2 }, true },
+               { new Customer { CustomerId = 53274324, Score = 95, Rank = 6 }, true },
+               { new Customer { CustomerId = 6144320, Score = 93, Rank = 7 }, true },
+               { new Customer { CustomerId = 8009471, Score = 93, Rank = 8 }, true },
+               { new Customer { CustomerId = 11028481, Score = 93, Rank = 9 }, true },
+               { new Customer { CustomerId = 1745431, Score = 100, Rank = 3 }, true },
+               { new Customer { CustomerId = 76786448, Score = 100, Rank = 4 }, true },
+               { new Customer { CustomerId = 254814111, Score = 96, Rank = 5 }, true },
+               
+               { new Customer { CustomerId = 38819, Score = 92, Rank = 10 }, true },
+            };        
         }
-
+        /// <summary>
+        /// 通过customerId获取指定Customer对象
+        /// </summary>
+        /// <param name="customerId"></param>
+        /// <returns></returns>
         public async Task<Customer> GetCustomerByIdAsync(long customerId)
         {
-            // 模拟异步操作，例如更新数据库中的数据
-            await Task.Delay(100); // 正常业务替换为实际的异步操作
-            // 实际数据库操作
-            if (_customerDictionary.TryGetValue(customerId, out Customer customer))
+            //模拟异步操作，例如更新数据库
+            await Task.Delay(100); //替换为实际的异步操作
+            //实际的数据库操作
+            foreach (var pair in _customerDictionary)
             {
-                return customer;
+                if (pair.Key.CustomerId == customerId)
+                {
+                    return pair.Key;
+                }
             }
             return null;
         }
@@ -81,17 +57,21 @@ namespace Demo.MicroService.Repository
         /// <exception cref="ArgumentException"></exception>
         public async Task<List<Customer>> GetHighRankCustomersAsync(long customerId, int count)
         {
-            Customer customer = await GetCustomerByIdAsync(customerId);
-            if (customer == null)
+            Customer targetCustomer = await GetCustomerByIdAsync(customerId);
+
+            if (targetCustomer == null)
             {
                 return null;
             }
 
-            int index = _sortedCustomersSet.GetViewBetween(customer, _sortedCustomersSet.Max).Count - 1;
-            int start = Math.Max(0, index - count + 1);
-            int end = index + 1;
+            // 获取排名比目标客户高的所有客户
+            var highRankCustomers = _customerDictionary.Keys
+                .Where(c => c.Rank < targetCustomer.Rank) // 所有等级较高的客户
+                .OrderByDescending(c => c.Rank) // 按等级升序排列的
+                .Take(count) 
+                .ToList();
 
-            return _sortedCustomersSet.Skip(start).Take(end - start).ToList();
+            return highRankCustomers;
         }
 
         /// <summary>
@@ -103,17 +83,21 @@ namespace Demo.MicroService.Repository
         /// <exception cref="ArgumentException"></exception>
         public async Task<List<Customer>> GetLowRankCustomersAsync(long customerId, int count)
         {
-            Customer customer = await GetCustomerByIdAsync(customerId);
-            if (customer == null)
+            Customer targetCustomer = await GetCustomerByIdAsync(customerId);
+
+            if (targetCustomer == null)
             {
                 return null;
             }
 
-            int index = _sortedCustomersSet.GetViewBetween(_sortedCustomersSet.Min, customer).Count;
-            int start = index;
-            int end = Math.Min(_sortedCustomersSet.Count, index + count);
+            //获取所有排名比目标客户低的客户
+            var lowRankCustomers = _customerDictionary.Keys
+                .Where(c => c.Rank > targetCustomer.Rank) 
+                .OrderBy(c => c.Rank) 
+                .Take(count) 
+                .ToList();
 
-            return _sortedCustomersSet.Skip(start).Take(end - start).ToList();
+            return lowRankCustomers;
         }
 
         /// <summary>
@@ -126,25 +110,24 @@ namespace Demo.MicroService.Repository
         {
             //模拟异步操作，例如更新数据库中的数据
             await Task.Delay(100); // 正常业务替换为实际的异步操作
-            if (!_customerDictionary.ContainsKey(customerId))
+            Customer customerToUpdate = await GetCustomerByIdAsync(customerId);
+            if (customerToUpdate == null)
             {
-                // 客户ID不存在，将新客户添加到排行榜中
-                var newCustomer = new Customer { CustomerId = customerId, Score = newScore, Rank = 0 };
-                _customerDictionary.Add(customerId, newCustomer);
-                _sortedCustomersSet.Add(newCustomer);
+                // CustomerID不存在添加数据
+                customerToUpdate = new Customer { CustomerId = customerId, Score = newScore };
+                _customerDictionary.Add(customerToUpdate, true);
             }
             else
             {
-                // 客户ID已经存在，更新其分数
-                var existingCustomer = _customerDictionary[customerId];
-                _sortedCustomersSet.Remove(existingCustomer); // 从有序集合中移除
-                existingCustomer.Score += newScore;
-                _sortedCustomersSet.Add(existingCustomer); // 将更新后的客户信息添加回有序集合
+                // CustomerID已经存在，更新它的分数
+                _customerDictionary.Remove(customerToUpdate);
+                customerToUpdate.Score += newScore;
+                _customerDictionary.Add(customerToUpdate, true); //更新客户信息
             }
 
-            UpdateRanks(); // 更新排名
+            UpdateRanks(); // 修改排名
 
-            return _customerDictionary[customerId].Score;
+            return customerToUpdate.Score; // 返回跟新后的数据
         }
 
         /// <summary>
@@ -157,9 +140,9 @@ namespace Demo.MicroService.Repository
         {
             // 模拟异步操作，例如更新数据库中的数据
             await Task.Delay(100); // 正常业务替换为实际的异步操作
-            var leaderboard = _sortedCustomersSet
-               .Where(c => (!start.HasValue || c.Rank >= start) && (!end.HasValue || c.Rank <= end))
-               .ToList();
+            var leaderboard = _customerDictionary.Keys
+            .Where(c => (!start.HasValue || c.Rank >= start) && (!end.HasValue || c.Rank <= end))
+            .ToList();
             return leaderboard;
         }
 
@@ -169,7 +152,7 @@ namespace Demo.MicroService.Repository
         private void UpdateRanks()
         {
             int rank = 1;
-            foreach (var customer in _sortedCustomersSet)
+            foreach (var customer in _customerDictionary.Keys.OrderByDescending(c => c.Score))
             {
                 customer.Rank = rank++;
             }

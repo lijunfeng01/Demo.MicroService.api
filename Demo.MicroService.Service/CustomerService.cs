@@ -1,14 +1,18 @@
-﻿using Demo.MicroService.Models;
-using Demo.MicroService.IService;
+﻿using Demo.MicroService.IService;
+using Demo.MicroService.Models;
 using Demo.MicroService.Repository;
-using System.Threading;
 
 namespace Demo.MicroService.Service
 {
     public class CustomerService : ICustomerService
     {
         private readonly CustomerRepository _customerRepository;
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 5); // 控制并发访问的信号量
+        //初始信号量为1，最大信号量为5。这表示最多只有一个线程可以访问共享资源，但最多可以有5个线程等待访问
+        //private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 5); // 控制并发访问的信号量
+
+        //读写分离
+        private readonly SemaphoreSlim _readSemaphore = new SemaphoreSlim(5); // 控制读操作的并发数量
+        private readonly SemaphoreSlim _writeSemaphore = new SemaphoreSlim(1); // 控制写操作的并发数量
 
         public CustomerService(CustomerRepository customerRepository)
         {
@@ -17,14 +21,14 @@ namespace Demo.MicroService.Service
 
         public async Task<decimal> UpdateCustomerScoreAsync(long customerId, decimal scoreChange)
         {
-            await _semaphore.WaitAsync(); // 等待信号量
+            await _writeSemaphore.WaitAsync(); // 等待信号量
             try
             {
                 return await _customerRepository.UpdateCustomerScoreAsync(customerId, scoreChange);
             }
             finally
             {
-                _semaphore.Release(); // 释放信号量
+                _writeSemaphore.Release(); // 释放信号量
             }
 
         }
@@ -32,14 +36,14 @@ namespace Demo.MicroService.Service
         public async Task<List<Customer>> GetLeaderboardAsync(int? start, int? end)
         {
 
-            await _semaphore.WaitAsync(); // 等待信号量
+            await _readSemaphore.WaitAsync(); // 等待信号量
             try
             {
                 return await _customerRepository.GetLeaderboardAsync(start, end);
             }
             finally
             {
-                _semaphore.Release(); // 释放信号量
+                _readSemaphore.Release(); // 释放信号量
             }
 
         }
@@ -53,7 +57,7 @@ namespace Demo.MicroService.Service
         /// <returns></returns>
         public async Task<List<Customer>> GetCustomerByIdAsync(long customerId, int high, int low)
         {
-            await _semaphore.WaitAsync(); // 等待信号量
+            await _readSemaphore.WaitAsync(); // 等待信号量
             try
             {
                 // 模拟异步并行处理，使用 Task.WhenAll 方法
@@ -64,14 +68,15 @@ namespace Demo.MicroService.Service
                 await Task.WhenAll(customerTask, highTask, lowTask);
 
                 var result = new List<Customer>();
+                result.Add(customerTask.Result);
                 result.AddRange(highTask.Result);
                 result.AddRange(lowTask.Result);
 
-                return result;
+                return result.OrderBy(c=>c.Rank).ToList();
             }
             finally
             {
-                _semaphore.Release(); // 释放信号量
+                _readSemaphore.Release(); // 释放信号量
             }
         }
     }
