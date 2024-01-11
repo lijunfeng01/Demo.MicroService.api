@@ -94,12 +94,18 @@ namespace TestProject2
         {
             // Arrange
             var mockService = new Mock<ICustomerService>();
-            long customerId = 6144320;
+            long customerId = 7777777;
             int high = 2;
-            int low = 2;
+            int low = 3;
             var customerWithNeighbors = new List<Customer>
-            {
-                // Add customers that would represent neighbors
+            {                          
+               // 添加代表邻居的客户
+               new Customer { CustomerId = 7786448, Score = 313, Rank = 89 }, 
+               new Customer { CustomerId = 54814111, Score = 301, Rank = 90 },
+               new Customer { CustomerId = 7777777, Score = 298, Rank = 91 },
+               new Customer { CustomerId = 96144320, Score = 298, Rank = 92 },
+               new Customer { CustomerId = 16144320, Score = 270, Rank = 93 },
+               new Customer { CustomerId = 2000437, Score = 239, Rank = 94 },
             };
 
             mockService.Setup(s => s.GetCustomerByIdAsync(customerId, high, low))

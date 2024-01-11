@@ -92,6 +92,6 @@ public class CustomerController : ControllerBase
             return BadRequest("低邻居计数不能为负");
         }
         var customerWithNeighbors = await _customerService.GetCustomerByIdAsync(customerId, high, low);
-        return customerWithNeighbors;
+        return Ok(customerWithNeighbors);
     }
 }
